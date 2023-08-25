@@ -74,4 +74,11 @@ mod test_case {
 
         assert_ne!(result, U256::zero());
     }
+    #[test]
+    fn get_fee3() {
+        let result = calculate_summation(U256::one(), U256::from(5));
+        println!("Result {:#?}", result);
+
+        assert_ne!(result, U256::zero());
+    }
 }

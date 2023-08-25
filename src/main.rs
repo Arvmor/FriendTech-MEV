@@ -57,7 +57,7 @@ async fn main() -> Result<()>{
                     println!("Victim {:#?}", results);
 
                     tokio::spawn(
-                        send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::one(), results.7, nonce), block_number, base_fee)
+                        send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(2), results.7, nonce), block_number, base_fee)
                     );
                 }
                 
