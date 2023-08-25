@@ -3,7 +3,9 @@ use eyre::Result;
 use ethers::{providers::{Http, Provider,Ws, Middleware, StreamExt}, types::{BlockNumber, H160, Filter}};
 
 mod credentials;
+mod decoder;
 use credentials::*;
+use decoder::*;
 
 #[tokio::main]
 async fn main() -> Result<()>{
