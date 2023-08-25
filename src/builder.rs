@@ -10,6 +10,7 @@ pub fn build_buy_transaction(
     buy_from: H160,
     amount: U256,
     supply: U256,
+    nonce: U256,
 ) -> Eip1559TransactionRequest {
     let data = format!("0x6945b123{:0>64}{:0>64}", &to_checksum(&buy_from, Some(1))[2..], amount);
     let value = calculate_summation(supply, amount);
@@ -18,6 +19,11 @@ pub fn build_buy_transaction(
         .from(my_address().parse::<H160>().unwrap())
         .to("0xcf205808ed36593aa40a44f10c7f7c2f67d4a4d4".parse::<H160>().unwrap())
         .value(value)
+        .gas(200_000)
+        .nonce(nonce)
+        .max_fee_per_gas(0)
+        .max_priority_fee_per_gas(0)
+        .chain_id(8453)
         .data(data.parse::<Bytes>().unwrap())
 }
 
@@ -37,8 +43,6 @@ fn calculate_summation(supply: U256, amount: U256) -> U256 {
     let summation = sum2 - sum1;
     let price = summation.mul(parse_ether("1").unwrap()).div(16000);
     let fee = price.mul(50000000000000000u64).div(parse_ether("1").unwrap());
-    println!("Price {:#?}", price);
-    println!("Fee {:#?}", fee);
     price.add(fee).add(fee)
 }
 
