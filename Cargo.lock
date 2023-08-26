@@ -1144,6 +1144,9 @@ dependencies = [
  "ethers",
  "eyre",
  "hex",
+ "reqwest",
+ "serde",
+ "serde_derive",
  "tokio",
 ]
 

@@ -1,4 +1,4 @@
-use std::{sync::Arc, ops::{Add, Mul, Div}};
+use std::{sync::Arc, ops::Add};
 
 use ethers::{
     types::{Eip1559TransactionRequest, BlockNumber, U64, transaction::eip2930::AccessList, U256},
@@ -21,11 +21,15 @@ pub async fn send_trx(
         }
     };
 
-    transaction = transaction.access_list(frontrun_access_list).max_fee_per_gas(base_fee.mul(92u8).div(10)).max_priority_fee_per_gas(base_fee.mul(92u8).div(10));
-    println!("AL {:#?}", transaction.access_list);
+    transaction = transaction.access_list(frontrun_access_list).max_fee_per_gas(base_fee).max_priority_fee_per_gas(base_fee);
 
     match client.send_transaction(transaction, Some(BlockNumber::Number(block_number.add(1)).into())).await {
-        Ok(info) => println!("Success: {:#?}", info),
+        Ok(info) => {
+            match info.await {
+                Ok(info2) => println!("Success: {:#?}", info2.unwrap().transaction_hash),
+                Err(error) => eprintln!("failed {:#?}", error)
+            }
+        },
         Err(error) => eprintln!("failed {:#?}", error)
     }
     Ok(())

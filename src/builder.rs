@@ -27,6 +27,25 @@ pub fn build_buy_transaction(
         .data(data.parse::<Bytes>().unwrap())
 }
 
+pub fn build_sell_transaction(
+    sell_from: H160,
+    amount: U256,
+    nonce: U256,
+) -> Eip1559TransactionRequest {
+    let data = format!("0xb51d0534{:0>64}{:0>64}", &to_checksum(&sell_from, Some(1))[2..], amount);
+    
+    Eip1559TransactionRequest::default()
+        .from(my_address().parse::<H160>().unwrap())
+        .to("0xcf205808ed36593aa40a44f10c7f7c2f67d4a4d4".parse::<H160>().unwrap())
+        .value(0)
+        .gas(200_000)
+        .nonce(nonce)
+        .max_fee_per_gas(0)
+        .max_priority_fee_per_gas(0)
+        .chain_id(8453)
+        .data(data.parse::<Bytes>().unwrap())
+}
+
 fn calculate_summation(supply: U256, amount: U256) -> U256 {
     let sum1 = if supply == U256::zero() {
         U256::zero()

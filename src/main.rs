@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, ops::{Mul, Div}};
 
 use dotenv::dotenv;
 use eyre::Result;
@@ -12,6 +12,8 @@ mod builder;
 use builder::*;
 mod runner;
 use runner::*;
+mod api;
+use api::*;
 
 #[tokio::main]
 async fn main() -> Result<()>{
@@ -34,6 +36,7 @@ async fn main() -> Result<()>{
     let mut block_number = U64::zero();
     let mut nonce = U256::zero();
     let mut base_fee = U256::zero();
+    let mut sell_cycle = true;
 
     let result = provider.get_balance(my_address().parse::<H160>().unwrap(), Some(BlockNumber::Latest.into())).await;
     println!("Bal {:#?}", result);
@@ -47,6 +50,13 @@ async fn main() -> Result<()>{
                 nonce = provider.get_transaction_count(my_address().parse::<H160>().unwrap(), Some(BlockNumber::Latest.into())).await?;
                 base_fee = latest_block.next_block_base_fee().unwrap();
 
+                if sell_cycle {
+                    tokio::spawn(
+                        send_trx(provider.clone(), client.clone(), build_sell_transaction("0xe197c664022fea409a6f4ab8a351cff912f6967a".parse().unwrap(), U256::from(2), nonce), block_number, base_fee.mul(101u8).div(100))
+                    );
+                    sell_cycle = false;
+                }
+
             },
 
             Some(pending_transaction) = pending_transactions_stream.next() => {
@@ -57,7 +67,7 @@ async fn main() -> Result<()>{
                     println!("Victim {:#?}", results);
 
                     tokio::spawn(
-                        send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(2), results.7, nonce), block_number, base_fee)
+                        send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(2), results.7, nonce), block_number, base_fee.mul(92u8).div(10))
                     );
                 }
                 
