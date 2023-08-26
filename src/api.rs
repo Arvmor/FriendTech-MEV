@@ -1,4 +1,4 @@
-use std::{future::Future, pin::Pin};
+use std::{future::Future, pin::Pin, time::Duration};
 
 use ethers::types::H160;
 use eyre::Result;
@@ -27,7 +27,7 @@ struct PublicMetrics {
     followers_count: u64,
 }
 
-pub fn get_user(address: H160, retry_count: usize) -> Pin<Box<dyn Future<Output = Result<String, String>>>> {
+pub fn get_user(address: H160, retry_count: usize) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send>> {
     if retry_count == 0 {
         return Box::pin(async { Err("Request Timeout".to_string()) });
     }
@@ -35,6 +35,7 @@ pub fn get_user(address: H160, retry_count: usize) -> Pin<Box<dyn Future<Output 
     Box::pin(async move {
         let client = reqwest::Client::new();
         let response = client.get(format!("https://prod-api.kosetto.com/users/{:#?}", address))
+            .timeout(Duration::from_secs(1))
             .send()
             .await;
 
@@ -58,7 +59,7 @@ pub async fn get_user_followers(user_id: &str) -> Result<u64, Error> {
         .await?;
 
     let response_data: Response = response.json().await?;
-    println!("Followers: {:#?}", response_data.data.public_metrics.followers_count);
+
     Ok(response_data.data.public_metrics.followers_count)
 }
 

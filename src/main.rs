@@ -62,14 +62,9 @@ async fn main() -> Result<()>{
                 let results = decode_buy_share(pending_transaction.data);
 
                 if is_new_share(results) {
-                    println!("Victim {:#?}", results);
-
-                    println!("{:#?}", get_user(results.1, 10).await);
-                    // tokio::spawn(
-                    //     send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(1), results.7, nonce), block_number, base_fee.mul(55u8).div(10))
-                    // );
-
-                    // nonce = nonce.add(1);
+                    tokio::spawn (
+                        runner(results, provider.clone(), client.clone(), nonce, block_number, base_fee)
+                    );
                 }
                 
             },
