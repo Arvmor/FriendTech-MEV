@@ -1,4 +1,4 @@
-use std::{sync::Arc, ops::{Mul, Div, Add}};
+use std::sync::Arc;
 
 use dotenv::dotenv;
 use eyre::Result;
@@ -13,18 +13,22 @@ use builder::*;
 mod runner;
 use runner::*;
 mod api;
-use api::*;
+use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<()>{
     dotenv().ok();
 
+    // Sender/Receiver to watch for new wallets
+    let (sender, mut receiver) = mpsc::channel(100);
     // Establishing Connections to WS & HTTP providers
     let provider: Arc<Provider<Http>> = Arc::new(Provider::<Http>::try_from(http_provider_url())?);
+    let mainnet_ws_provider: Provider<Ws> = Provider::<Ws>::connect("wss://convincing-frequent-general.quiknode.pro/").await?;
     // To fetch pending transactions
     let ws_provider: Provider<Ws> = Provider::<Ws>::connect(ws_provider_url()).await?;
     // Getting pending transactions from mempool
-    let mut pending_transactions_stream = ws_provider.subscribe_logs(&Filter::new().select(BlockNumber::Latest).event("Trade(address,address,bool,uint256,uint256,uint256,uint256,uint256)")).await?;
+    let mut mined_transactions_stream = ws_provider.subscribe_logs(&Filter::new().select(BlockNumber::Latest).event("Trade(address,address,bool,uint256,uint256,uint256,uint256,uint256)")).await?;
+    let mut pending_mainnet_stream = mainnet_ws_provider.subscribe_full_pending_txs().await?;
     // Getting Latest blocks for mined TRXs
     let mut latest_block_stream = ws_provider.subscribe_blocks().await?;
     // This signs transactions
@@ -36,13 +40,16 @@ async fn main() -> Result<()>{
     let mut block_number = U64::zero();
     let mut nonce = U256::zero();
     let mut base_fee = U256::zero();
-    let mut sell_cycle = false;
+    let mut watchlist = vec![];
 
     let result = provider.get_balance(my_address().parse::<H160>().unwrap(), Some(BlockNumber::Latest.into())).await;
     println!("Bal {:#?}", result);
 
     loop {
         tokio::select! {
+            Some(to_watch) = receiver.recv() => {
+                watchlist.push(to_watch)
+            },
             Some(latest_block) = latest_block_stream.next() => {
 
                 // Get Mined Blocks
@@ -50,20 +57,26 @@ async fn main() -> Result<()>{
                 nonce = provider.get_transaction_count(my_address().parse::<H160>().unwrap(), Some(BlockNumber::Latest.into())).await?;
                 base_fee = latest_block.next_block_base_fee().unwrap();
 
-                if sell_cycle {
-                    send_trx(provider.clone(), client.clone(), build_sell_transaction("0x508b275d2f72330a341495e39e45aa54e976b542".parse().unwrap(), U256::from(1), nonce), block_number, base_fee.mul(112u8).div(100)).await;
-                    sell_cycle = false;
-                }
-
             },
 
-            Some(pending_transaction) = pending_transactions_stream.next() => {
+            Some(mined_transaction) = mined_transactions_stream.next() => {
 
-                let results = decode_buy_share(pending_transaction.data);
+                let results = decode_buy_share(mined_transaction.data);
 
                 if is_new_share(results) {
                     tokio::spawn (
-                        runner(results, provider.clone(), client.clone(), nonce, block_number, base_fee)
+                        runner(watchlist.clone(), results, client.clone(), nonce, block_number, base_fee)
+                    );
+                }
+                
+            },
+
+            Some(pending_transaction) = pending_mainnet_stream.next() => {
+
+                let new_address = decode_bridge_to_base(pending_transaction);
+                if new_address.is_some(){
+                    tokio::spawn(
+                        add_to_watchlist(new_address.unwrap(), sender.clone())
                     );
                 }
                 

@@ -1,5 +1,6 @@
 {
     "cSpell.ignoreWords": [
-        "dotenv"
+        "dotenv",
+        "reqwest"
     ]
 }

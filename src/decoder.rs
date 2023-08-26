@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use ethers::types::{Bytes, H160, U256};
+use ethers::types::{Bytes, H160, U256, Transaction};
 
 pub fn decode_buy_share(
     input: Bytes
@@ -20,6 +20,21 @@ pub fn decode_buy_share(
     let subject_eth_amount = U256::from_str(&data_hex[384..448]).unwrap();
     let supply = U256::from_str(&data_hex[448..]).unwrap();
     (buyer, owner, is_buy, share_amount, eth_amount, protocol_eth_amount, subject_eth_amount, supply)
+}
+
+pub fn decode_bridge_to_base(
+    transaction: Transaction
+) -> Option<H160> {
+    if transaction.to.unwrap_or(H160::default()) == "0x3154Cf16ccdb4C6d922629664174b904d80F2C35".parse::<H160>().unwrap() {
+        // Parse to string
+        let data_hex = hex::encode(&transaction.input);
+        if &data_hex[..8] == "9a2ac6d5" {
+            println!("NEW BRIDGE: {:#?}", transaction.hash);
+            let bridged_address = &data_hex[32..72].parse::<H160>().unwrap();
+            return Some(*bridged_address);
+        }
+    } 
+    return None;
 }
 
 
