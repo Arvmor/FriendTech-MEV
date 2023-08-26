@@ -23,3 +23,9 @@ pub fn my_private_key() -> String {
     env::var("PRIVATE_KEY").expect("PRIVATE_KEY NOT FOUND")
 
 }
+
+pub fn twitter_token() -> String {
+    
+    env::var("TWITTER_TOKEN").expect("TWITTER_TOKEN NOT FOUND")
+
+}

@@ -1,4 +1,4 @@
-use std::{sync::Arc, ops::{Mul, Div}};
+use std::{sync::Arc, ops::{Mul, Div, Add}};
 
 use dotenv::dotenv;
 use eyre::Result;
@@ -36,7 +36,7 @@ async fn main() -> Result<()>{
     let mut block_number = U64::zero();
     let mut nonce = U256::zero();
     let mut base_fee = U256::zero();
-    let mut sell_cycle = true;
+    let mut sell_cycle = false;
 
     let result = provider.get_balance(my_address().parse::<H160>().unwrap(), Some(BlockNumber::Latest.into())).await;
     println!("Bal {:#?}", result);
@@ -51,9 +51,7 @@ async fn main() -> Result<()>{
                 base_fee = latest_block.next_block_base_fee().unwrap();
 
                 if sell_cycle {
-                    tokio::spawn(
-                        send_trx(provider.clone(), client.clone(), build_sell_transaction("0xe197c664022fea409a6f4ab8a351cff912f6967a".parse().unwrap(), U256::from(2), nonce), block_number, base_fee.mul(101u8).div(100))
-                    );
+                    send_trx(provider.clone(), client.clone(), build_sell_transaction("0x508b275d2f72330a341495e39e45aa54e976b542".parse().unwrap(), U256::from(1), nonce), block_number, base_fee.mul(112u8).div(100)).await;
                     sell_cycle = false;
                 }
 
@@ -66,9 +64,12 @@ async fn main() -> Result<()>{
                 if is_new_share(results) {
                     println!("Victim {:#?}", results);
 
-                    tokio::spawn(
-                        send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(2), results.7, nonce), block_number, base_fee.mul(92u8).div(10))
-                    );
+                    println!("{:#?}", get_user(results.1, 10).await);
+                    // tokio::spawn(
+                    //     send_trx(provider.clone(), client.clone(), build_buy_transaction(results.1, U256::from(1), results.7, nonce), block_number, base_fee.mul(55u8).div(10))
+                    // );
+
+                    // nonce = nonce.add(1);
                 }
                 
             },
