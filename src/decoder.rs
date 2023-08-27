@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use colored::Colorize;
 use ethers::types::{Bytes, H160, U256, Transaction};
 
 pub fn decode_buy_share(
@@ -29,7 +30,7 @@ pub fn decode_bridge_to_base(
         // Parse to string
         let data_hex = hex::encode(&transaction.input);
         if &data_hex[..8] == "9a2ac6d5" {
-            println!("NEW BRIDGE: {:#?}", transaction.hash);
+            println!("{} {:#?}", "NEW BRIDGE:".yellow(), transaction.hash);
             let bridged_address = &data_hex[32..72].parse::<H160>().unwrap();
             return Some(*bridged_address);
         }

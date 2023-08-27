@@ -1,5 +1,5 @@
 use std::{sync::Arc, ops::{Add, Mul, Div}, error::Error};
-
+use colored::*;
 use ethers::{
     types::{Eip1559TransactionRequest, BlockNumber, U64, U256},
     providers::{Http, Provider, Middleware}, signers::Wallet, prelude::{*, k256::ecdsa::SigningKey}
@@ -39,9 +39,9 @@ pub async fn runner(
 ) -> Result<(), Box<dyn Error + Send>> {
 
     if watchlist.contains(&results.1) {
-        println!("SENDING !");
+        println!("{}", "SENDING !".green());
         tokio::spawn(
-            send_trx(client.clone(), build_buy_transaction(results.1, U256::from(1), results.7, nonce), block_number, base_fee.mul(700u16).div(10))
+            send_trx(client.clone(), build_buy_transaction(results.1, U256::from(1), results.7, nonce), block_number, base_fee.mul(1100u16).div(10))
         );
     }
 
@@ -53,14 +53,21 @@ pub async fn add_to_watchlist(
     sender: Sender<H160>
 ) -> Result<(), Box<dyn Error + Send>> {
 
-    println!("Victim {:#?}", address);
-    let username = get_user(address, 100).await.unwrap();
-    println!("ID: @{:#?}", username);
+    println!("{} {:#?}", "Victim".yellow(), address);
+    let username = match get_user(address, 100).await {
+        Ok(username) => username,
+        Err(error) => {
+            eprint!("{} {:#?}", "[!] Failed Fetch Username".red(), error);
+            return Ok(())
+        }
+    };
+
+    println!("{} @{:#?}", "ID:".blue(), username);
     let follower_count = get_user_followers(&username).await.unwrap();
-    println!("Follower Count: {:#?}", follower_count);
+    println!("{} {:#?}", "Follower Count:".blue(), follower_count);
 
     if follower_count > 1000 {
-        println!("Added ! {:#?}", address);
+        println!("{} {:#?}", "Added !".green(), address);
         sender.send(address).await.expect("Failed to add address");
     }
 
