@@ -20,12 +20,10 @@ async fn main() -> Result<()>{
 
     // Establishing Connections to WS & HTTP providers
     let provider: Arc<Provider<Http>> = Arc::new(Provider::<Http>::try_from(http_provider_url())?);
-    let mainnet_ws_provider: Provider<Ws> = Provider::<Ws>::connect("wss://convincing-frequent-general.quiknode.pro/").await?;
     // To fetch pending transactions
     let ws_provider: Provider<Ws> = Provider::<Ws>::connect(ws_provider_url()).await?;
     // Getting pending transactions from mempool
     let mut mined_transactions_stream = ws_provider.subscribe_logs(&Filter::new().select(BlockNumber::Latest).event("Trade(address,address,bool,uint256,uint256,uint256,uint256,uint256)")).await?;
-    let mut pending_mainnet_stream = mainnet_ws_provider.subscribe_full_pending_txs().await?;
     // Getting Latest blocks for mined TRXs
     let mut latest_block_stream = ws_provider.subscribe_blocks().await?;
     // This signs transactions

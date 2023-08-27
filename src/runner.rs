@@ -17,7 +17,7 @@ pub async fn send_trx(
 ) -> Result<()> {
     transaction = transaction.max_fee_per_gas(base_fee).max_priority_fee_per_gas(base_fee);
 
-    match client.send_transaction(transaction, Some(BlockNumber::Number(block_number.add(1)).into())).await {
+    match client.send_transaction(transaction, None).await {
         Ok(info) => {
             match info.await {
                 Ok(info2) => println!("Success: {:#?}", info2.unwrap().transaction_hash),
@@ -38,25 +38,20 @@ pub async fn runner(
     base_fee: U256
 ) -> Result<(), Box<dyn Error + Send>> {
 
-    if watchlist.contains(&results.1) {
-        println!("{}", "SENDING !".green());
-        send_trx(client.clone(), build_buy_transaction(results.1, U256::from(4), results.7, nonce), block_number, base_fee.mul(1100u16).div(10)).await.unwrap();
-    } else {
-        let username = match get_user(results.1, 14).await {
-            Ok(username) => username,
-            Err(error) => {
-                eprint!("{} {:#?}", "[!] Failed Fetch Username".red(), error);
-                return Ok(())
-            }
-        };
-        println!("{} @{:#?}", "ID:".blue(), username);
-        let follower_count = get_user_followers(&username).await.unwrap();
-        println!("{} {:#?}", "Follower Count:".blue(), follower_count);
-
-        if follower_count > 1000 {
-            println!("{}", "SENDING !".green());
-            send_trx(client.clone(), build_buy_transaction(results.1, U256::from(4), results.7, nonce), block_number, 60000000000u128.into()).await.unwrap();
+    let username = match get_user(results.1, 5).await {
+        Ok(username) => username,
+        Err(error) => {
+            eprint!("{} {:#?}", "[!] Failed Fetch Username".red(), error);
+            return Ok(())
         }
+    };
+    println!("{} @{:#?}", "ID:".blue(), username);
+    let follower_count = get_user_followers(&username).await.unwrap();
+    println!("{} {:#?}", "Follower Count:".blue(), follower_count);
+
+    if follower_count > 1000 {
+        println!("{}", "SENDING !".green());
+        send_trx(client.clone(), build_buy_transaction(results.1, U256::from(4), results.7, nonce), block_number, 109000000000u128.into()).await.unwrap();
     }
 
     Ok(())
