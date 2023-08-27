@@ -13,14 +13,11 @@ use builder::*;
 mod runner;
 use runner::*;
 mod api;
-use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<()>{
     dotenv().ok();
 
-    // Sender/Receiver to watch for new wallets
-    let (sender, mut receiver) = mpsc::channel(100);
     // Establishing Connections to WS & HTTP providers
     let provider: Arc<Provider<Http>> = Arc::new(Provider::<Http>::try_from(http_provider_url())?);
     let mainnet_ws_provider: Provider<Ws> = Provider::<Ws>::connect("wss://convincing-frequent-general.quiknode.pro/").await?;
@@ -47,9 +44,6 @@ async fn main() -> Result<()>{
 
     loop {
         tokio::select! {
-            Some(to_watch) = receiver.recv() => {
-                watchlist.push(to_watch)
-            },
             Some(latest_block) = latest_block_stream.next() => {
 
                 // Get Mined Blocks
@@ -66,17 +60,6 @@ async fn main() -> Result<()>{
                 if is_new_share(results) {
                     tokio::spawn (
                         runner(watchlist.clone(), results, client.clone(), nonce, block_number, base_fee)
-                    );
-                }
-                
-            },
-
-            Some(pending_transaction) = pending_mainnet_stream.next() => {
-
-                let new_address = decode_bridge_to_base(pending_transaction);
-                if new_address.is_some(){
-                    tokio::spawn(
-                        add_to_watchlist(new_address.unwrap(), sender.clone())
                     );
                 }
                 

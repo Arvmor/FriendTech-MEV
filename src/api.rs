@@ -35,7 +35,7 @@ pub fn get_user(address: H160, retry_count: usize) -> Pin<Box<dyn Future<Output 
     Box::pin(async move {
         let client = reqwest::Client::new();
         let response = client.get(format!("https://prod-api.kosetto.com/users/{:#?}", address))
-            .timeout(Duration::from_secs(1))
+            .timeout(Duration::from_millis(200))
             .send()
             .await;
 

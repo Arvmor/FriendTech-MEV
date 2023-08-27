@@ -18,7 +18,7 @@ pub fn build_buy_transaction(
     Eip1559TransactionRequest::default()
         .from(my_address().parse::<H160>().unwrap())
         .to("0xcf205808ed36593aa40a44f10c7f7c2f67d4a4d4".parse::<H160>().unwrap())
-        .value(value)
+        .value(U256::from(2064375000000000u128))
         .gas(200_000)
         .nonce(nonce)
         .max_fee_per_gas(0)
