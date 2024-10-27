@@ -1,15 +1,11 @@
-# friend-tech-mev
+# Friend Tech MEV
 
-A powerful tool to streamline Friend Tech transaction management, optimized for maximal extractable value (MEV) through a targeted bot strategy. 
-
-## Overview
-
-**friend-tech-mev** leverages on-chain data and transaction optimization strategies to enhance MEV opportunities within Friend Tech transactions. The bot is designed to maximize profitability by capitalizing on transaction timing and price movement, providing an efficient and effective solution for Friend Tech traders and developers.
+Track and Simulate pending transactions to detect and snipe freshly joined users on the [Friend Tech](https://friend.tech) Platform. Using Third-Party APIs such as Twitter, we can analyze the new users and cherry-pick the Influencer/well-known accounts. 
 
 ### Features
 
-- **Efficient transaction routing** to optimize MEV opportunities.
-- **Real-time data handling** for Friend Tech transaction monitoring.
+- **Simulations** to identify pending transactions related to the Friend Tech ecosystem.
+- **Real-time Pending Transaction** for EVM chains to take action before they land on the chain.
 - **Customizable strategies** tailored to user-defined parameters.
 - **Seamless integration** with Friend Tech’s APIs and blockchain data sources.
 
